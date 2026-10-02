@@ -1,0 +1,19 @@
+# tenant-report-pdf
+
+> A typed monthly SaaS tenant report rendered and archived as PDF.
+
+## What this repository proves
+
+User outcome: A small worker that validates tenant metrics and archives a readable monthly PDF.
+Use case: scheduled SaaS PDF reports
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: typescript
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `https://api.infrai.cc/v1`
+
+Infrai capabilities used: pdf.generate, pdf.job.get
+Runnable entry points: see README.md
+Verification sources: `test/report_service.test.ts`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt

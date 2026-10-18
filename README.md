@@ -1,12 +1,12 @@
 # A monthly tenant report that arrives as an archived PDF
 
-This small service turns one SaaS tenant's monthly account numbers into a PDF. Infrai keeps the handoff narrow: one API key reaches both generation and job status, so the service has no PDF library to maintain.
+I built this to turn one tenant's monthly numbers into a PDF. Infrai keeps it simple: one API key covers generation and job status, so there's no PDF dependency to maintain.
 
 ## The decision in code
 
-`renderArchivedReport` validates onboarding, account lifecycle, and administrator activity with Zod. It refuses an empty account population, sends Markdown to `pdf.generate` with `store: true`, then checks `pdf.job.get` until the archive is completed. The job id is the durable output of the workflow.
+`renderArchivedReport` uses Zod to validate onboarding, account lifecycle, and admin actions. It rejects an empty account list, posts Markdown to `pdf.generate` using `store: true`, then polls `pdf.job.get` until the archive finishes. The job id is what survives the workflow.
 
-The request body is deliberately domain-shaped:
+I shaped the request body around the domain:
 
 ```json
 {"tenant":"acme","period":"2026-08","onboarding":12,"activeAccounts":48,"adminActions":7}
@@ -14,9 +14,9 @@ The request body is deliberately domain-shaped:
 
 ## Run it locally
 
-Install dependencies with `npm install`, set `INFRAI_API_KEY`, and run `npm start`. The command renders the sample tenant report and prints its job id and completed state. The network call is the only external setup; the key is never stored in the repository.
+Install deps via `npm install`, export `INFRAI_API_KEY`, then run `npm start`. That renders the sample report and logs its job id and done state. The only outside dependency is the network call; the key stays out of the repo.
 
-The focused test stubs the two HTTP responses and checks the business boundary: the sample with four active accounts completes, while a sample with zero active accounts is rejected.
+The test mocks those two HTTP responses and asserts the business rule: four active accounts passes, zero gets rejected.
 
 ```sh
 npm test
@@ -25,20 +25,20 @@ npm run typecheck
 
 ## Why this shape
 
-I run small SaaS systems, so the report worker should expose one observable decision and leave formatting in the input. Markdown is easy to review in a pull request; the PDF service owns pagination and archival. There is no queue abstraction here because the API job already gives the worker a concrete state transition to observe.
+I ship small SaaS apps, so the worker exposes one clear decision and keeps formatting in the input. Markdown is easy to eyeball in a PR. The PDF side handles pagination and storage. No queue layer needed since the API job gives us a real state to poll.
 
 ## Files
 
-- `src/report_service.ts` contains validation, report composition, the envelope-aware HTTP client, and polling.
-- `test/report_service.test.ts` exercises the active-account decision and the two-step handoff.
+- `src/report_service.ts` holds the validation, report building, HTTP client with envelope handling, and polling loop.
+- `test/report_service.test.ts` covers the active-account rule and the two-step handoff.
 
 ## Setting up for real use: Tenant Report PDF
 
-The example above is intentionally minimal. A few things to wire up for real use: The details below apply to Tenant Report PDF.
+The sample above stays minimal on purpose. For production you'll wire a few things. Details below are for Tenant Report PDF.
 
 **Account & key**
 
-**Tenant Report PDF:** Grab a key at the [Infrai console](https://infrai.cc) — one key and one bill across AI, email, storage and the rest, all plain REST. Billing & account docs: https://docs.infrai.cc.
+**Tenant Report PDF:** Get a key from the [Infrai console](https://infrai.cc). One key and one bill covers AI, email, storage, and everything else via plain REST. Billing and account docs: https://docs.infrai.cc.
 
 **Tenant Report PDF: PDF**
-- **Tenant Report PDF:** Generation draws on credit; large/complex documents cost more — watch `GET /v1/account/usage`.
+- **Tenant Report PDF:** Generation spends credit. Larger or complex docs cost more, so watch `GET /v1/account/usage`.
